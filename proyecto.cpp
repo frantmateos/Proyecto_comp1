@@ -159,7 +159,7 @@ void disp_binary(int i){
             printf("*");
         }
         else{
-            printf("-");
+            printf(" ");
         }
     }
     printf("\n");
