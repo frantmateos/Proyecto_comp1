@@ -7,6 +7,7 @@
 #include <conio.h> // getch
 #include <vector>
 
+
 #define ENTER 13
 #define BACKSPACE 8
 #define INTENTOS 3
@@ -17,29 +18,24 @@ using namespace std;
 #include<conio.h>
 #include<unistd.h>
 #include <iostream>
-#include "EasyPIO.h"
+//#include "EasyPIO.h"
 
 int menu(void);
-void autof(void);
+void autof(unsigned long int a);
 void disp_binary(int);
-void not_yet(void);
-void choque(void);
-void sirena(void);
-void pendulo_newton(void);
+void choque(unsigned long int a);
+void sirena(unsigned long int a);
+void pendulo_newton(unsigned long int a);
 
 void retardo(unsigned long int a);
+int velocidad(unsigned long int*speed);
 
-//const char led[]={14,15,18,25,24,6,7};
+
+const char led[]={14,15,18,25,24,6,7};
+void leds(unsigned int a);
 
 int main (void) {
-   /*pioInit();
-    int i;
-    for (int i; i<8; i++){
-        pinMode(led[i], OUTPUT); // configure los 8 pines para los leds como salidas en main 
-    }
-    leds(0xFF); // Turn off leds active low
 
-*/
     vector<string> usuarios;
     vector<string> claves;
 
@@ -117,16 +113,24 @@ int main (void) {
     {
         cout << "\n\n\tBienvenido al sistema" << endl;
         int choice;
+        /*
+    for (int i = 0; i<8; i++){
+        pinMode(led[i], OUTPUT); // configure los 8 pines para los leds como salidas en main 
+    }
+    leds(0xFF); // Turn off leds active low
+    */
+        unsigned long int speed = 300000000;
+
          for( ; ; ){
         choice = menu();
         switch(choice){
-            case 1: autof();
+            case 1: autof(speed);
             break;
-            case 2: choque();
+            case 2: choque(speed);
             break;
-            case 3: pendulo_newton();
+            case 3: pendulo_newton(speed);
             break; 
-            case 4: sirena();
+            case 4: sirena(speed);
             break; 
             case 5: return(-1);
         }
@@ -159,13 +163,13 @@ void disp_binary(int i){
             printf("*");
         }
         else{
-            printf(" ");
+            printf("-");
         }
     }
     printf("\n");
 }
 
-void autof(void){
+void autof(unsigned long int speed){
     unsigned char output;
     char t,  j=1;
     float on_time = 1;
@@ -174,15 +178,17 @@ void autof(void){
     do{
         output = 0x80;
         for(t=0;t<8;t++){
+           // leds(output);
             disp_binary(output);
-            sleep(on_time);
+            retardo(speed);
             output = output>>1;
         }
         output = 0x01;
         for(t=0;t<6;t++){
+           // leds(output);
             output = output<<1;
             disp_binary(output);
-            sleep(on_time);
+            retardo(speed);
     
         }
     }while(--j);
@@ -191,20 +197,38 @@ void autof(void){
 
 }
 
-void choque(void){
+void choque(unsigned long int speed){
     printf("Choque..\n");
     char a;
     unsigned char tabla[8] = {0x81,0x42,0x24,0x18,0x18,0x24,0x42,0x81};
     for(int i=0;i<8;i++){
+        //leds(tabla[i]);
         disp_binary(tabla[i]);
-        sleep(1);
+        retardo(speed);
     }
 }
-
-void sirena(void){
+    
+void sirena(unsigned long int speed){
     printf("Sirena...\n");
-    int j=0;
-    //unsigned char tabla[] = {0xF0, 0xF};
+    int j=1;
+    int vel = 1;
+    unsigned char tabla[] = {0xF0, 0x0F, 0xCC, 0x33};
+    //unsigned char tabla2[] = {0xCC, 0x33}
+    while (vel == 1)
+    {
+        do{
+            for(int i=0; i<4; i++){
+            disp_binary(tabla[i]);
+            retardo(speed);
+            }
+            j--;
+        }while(j>=0);
+        vel = velocidad(&speed);
+
+        
+    }
+    
+    /*
     unsigned char tabla[8] = {0xF2, 0x12, 0x12, 0xFe, 0x90, 0x90, 0x9E, 0x00};
     do{
        for(int i=0; i<8; i++){
@@ -213,10 +237,10 @@ void sirena(void){
      }
      j--; 
     }while(j>=0);
-    
+    */
 }
 
-void pendulo_newton(void) {
+void pendulo_newton(unsigned long int speed) {
     printf("Pendulo de Newton..\n");
     int j=2;
 
@@ -224,15 +248,42 @@ void pendulo_newton(void) {
 
     do{
         for(int i = 0; i < 8; i++) {
+            //leds(tabla[i]);
            disp_binary(tabla[i]);
-           sleep(1);
+           retardo(speed);
         }
         j--;
     }while(j>=0);
+
 }
 
 void retardo(unsigned long int a){
     while (a)
     a--;
     
+}
+/*
+void leds(unsigned int a){
+    int Led;
+    for(int i = 0; i < 8;i++){
+        Led = (a>>1)&0x01;
+        digitalWrite(led[i],Led);
+    }
+}*/
+
+int velocidad(unsigned long int* speed) {
+    char c;
+    ssize_t bytesRead = read(STDIN_FILENO, &c, 1);
+    if (bytesRead > 0) {
+        if (c == 'e') {
+            return 0; // Exit the current function if 'e' is pressed
+        } else if (c == 'u') { // Increase speed
+            if (*speed > 100000000) { // Ensure speed doesn't go below the minimum threshold
+                *speed -= 50000000;
+            }
+        } else if (c == 'd') { // Decrease speed
+            *speed += 50000000;
+        }
+    }
+    return 1; // Continue running
 }
