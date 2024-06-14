@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <conio.h> // getch
 #include <vector>
-
+#include <ncurses.h>
 
 #define ENTER 13
 #define BACKSPACE 8
@@ -18,20 +18,20 @@ using namespace std;
 #include<conio.h>
 #include<unistd.h>
 #include <iostream>
-//#include "EasyPIO.h"
+#include "EasyPIO.h"
 
 int menu(void);
 void autof(unsigned long int a);
 void disp_binary(int);
 void choque(unsigned long int a);
 void sirena(unsigned long int a);
-void pendulo_newton(unsigned long int a);
+void semaforo(unsigned long int a);
 
 void retardo(unsigned long int a);
 int velocidad(unsigned long int*speed);
 
 
-const char led[]={14,15,18,25,24,6,7};
+const char led[]={14,15,18,23,24,25,8,7};
 void leds(unsigned int a);
 
 int main (void) {
@@ -55,14 +55,14 @@ int main (void) {
     do
     {
         system("cls");
-        cout << "\t\t\tLOGIN DE USUARIO" << endl;
-        cout << "\t\t\t----------------" << endl;
-        cout << "\n\tUsuario: ";
+        printf("\t\t\tLOGIN DE USUARIO\n");
+        printf("\t\t\t----------------\n");
+        printf("\n\tUsuario: \n");
         getline(cin, usuario);
 
         char caracter;
 
-        cout << "\tPassword: ";
+        printf("\tPassword: \n");
         caracter = getch();
 
         password = "";
@@ -73,13 +73,13 @@ int main (void) {
             if (caracter != BACKSPACE)
             {
                 password.push_back(caracter);
-                cout << "*";
+                printf("*");
             }
             else
             {
                 if (password.length() > 0)
                 {
-                    cout << "\b \b";
+                    printf("\b \b");
                     password = password.substr(0, password.length() - 1);
                 }
             }
@@ -98,7 +98,7 @@ int main (void) {
 
         if (!ingresa)
         {
-            cout << "\n\n\tEl usuario y/o password son incorrectos" << endl;
+            printf("\n\n\tEl usuario y/o password son incorrectos\n");
             cin.get();
             contador++;
         }
@@ -107,18 +107,17 @@ int main (void) {
 
     if (ingresa == false)
     {
-        cout << "\n\tUsted no pudo ingresar al sistema. ADIOS" << endl;
+        printf("\n\tUsted no pudo ingresar al sistema. ADIOS"\n);
     }
     else
     {
-        cout << "\n\n\tBienvenido al sistema" << endl;
+        printf("\n\n\tBienvenido al sistema\n");
         int choice;
-        /*
+    
     for (int i = 0; i<8; i++){
         pinMode(led[i], OUTPUT); // configure los 8 pines para los leds como salidas en main 
     }
-    leds(0xFF); // Turn off leds active low
-    */
+
         unsigned long int speed = 300000000;
 
          for( ; ; ){
@@ -128,7 +127,7 @@ int main (void) {
             break;
             case 2: choque(speed);
             break;
-            case 3: pendulo_newton(speed);
+            case 3: semaforo(speed);
             break; 
             case 4: sirena(speed);
             break; 
@@ -145,7 +144,7 @@ int menu(void){
         printf("\n Menu \n");
         printf("\n OPCION 1: Auto Fantastico \n");
         printf("\n OPCION 2: Choque \n");
-        printf("\n OPCION 3: Pendulo de Newton \n");
+        printf("\n OPCION 3: Semafor \n");
         printf("\n OPCION 4: Sirena \n");
         printf("\n OPCION 5: salir\n");
         scanf("%d", &s);
@@ -173,103 +172,113 @@ void autof(unsigned long int speed){
     unsigned char output;
     char t,  j=1;
     float on_time = 1;
-
+    int vel =1;
     printf("Comienza. Toque una tecla para terminar \n");
-    do{
+    while(vel = 1){
+        do{
+            output = 0x80;
+            for(t=0;t<8;t++){
+                leds(output);
+                disp_binary(output);
+                retardo(speed);
+                output = output>>1;
+            }
+            output = 0x01;
+            for(t=0;t<6;t++){
+                leds(output);
+                disp_binary(output);
+                output = output<<1;
+                retardo(speed);
+        
+            }
+        }while(--j);
         output = 0x80;
-        for(t=0;t<8;t++){
-           // leds(output);
-            disp_binary(output);
-            retardo(speed);
-            output = output>>1;
-        }
-        output = 0x01;
-        for(t=0;t<6;t++){
-           // leds(output);
-            output = output<<1;
-            disp_binary(output);
-            retardo(speed);
+        leds(output);
+        disp_binary(output);
+        
+    }
     
-        }
-    }while(--j);
-    output = 0x80;
-    disp_binary(output);
 
 }
 
 void choque(unsigned long int speed){
     printf("Choque..\n");
+    int vel = 1;
     char a;
     unsigned char tabla[8] = {0x81,0x42,0x24,0x18,0x18,0x24,0x42,0x81};
-    for(int i=0;i<8;i++){
-        //leds(tabla[i]);
+    while (vel == 1){
+        for(int i=0;i<8;i++){
+        leds(tabla[i]);
         disp_binary(tabla[i]);
         retardo(speed);
+        vel = velocidad(&speed);
+        }
     }
 }
     
 void sirena(unsigned long int speed){
     printf("Sirena...\n");
     int j=1;
+
     int vel = 1;
     unsigned char tabla[] = {0xF0, 0x0F, 0xCC, 0x33};
-    //unsigned char tabla2[] = {0xCC, 0x33}
     while (vel == 1)
     {
         do{
             for(int i=0; i<4; i++){
+            leds(tabla[i]);
             disp_binary(tabla[i]);
             retardo(speed);
             }
             j--;
         }while(j>=0);
         vel = velocidad(&speed);
-
-        
     }
     
-    /*
-    unsigned char tabla[8] = {0xF2, 0x12, 0x12, 0xFe, 0x90, 0x90, 0x9E, 0x00};
-    do{
-       for(int i=0; i<8; i++){
-       disp_binary(tabla[i]);
-       sleep(1);
-     }
-     j--; 
-    }while(j>=0);
-    */
 }
 
-void pendulo_newton(unsigned long int speed) {
-    printf("Pendulo de Newton..\n");
-    int j=2;
 
-    int tabla[8] = {0x3C,0x3A,0x39,0x3A,0x3C,0x5C,0x9C,0x5C}; 
-
-    do{
-        for(int i = 0; i < 8; i++) {
-            //leds(tabla[i]);
-           disp_binary(tabla[i]);
-           retardo(speed);
+void semaforo(unsigned long int speed) {
+    printf("Semaforo...\n");
+    int vel =1;
+    int pos = 0xC0; // Inicializa con el valor para 11000000
+    while(vel =1){
+            for (int i = 0; i < 4; i++) {
+            leds(pos) // Ejecuta las primeras cuatro secuencias
+            disp_binary(pos);
+            retardo(speed);
+            pos >>= 2; // Realiza un corrimiento a la derecha de 2 bits
         }
-        j--;
-    }while(j>=0);
 
+        pos = 0xFF; // Valor para 11111111
+        leds(pos);
+        disp_binary(pos);
+        retardo(speed);
+
+        pos = 0x00; // Valor para 00000000
+        leds(pos);
+        disp_binary(pos);
+        retardo(speed);
+        vel =velocidad(&speed);
+    }
+    
+    
 }
+
 
 void retardo(unsigned long int a){
     while (a)
     a--;
     
 }
-/*
+
 void leds(unsigned int a){
     int Led;
     for(int i = 0; i < 8;i++){
         Led = (a>>1)&0x01;
         digitalWrite(led[i],Led);
     }
-}*/
+}
 
 int velocidad(unsigned long int* speed) {
     char c;

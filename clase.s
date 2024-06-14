@@ -1,8 +1,4 @@
 .text
-
-
-
-
 -global_autof
 autof:
     PUSH (R4,R5,R6,LR)          //Guarda los registros R4, R5, R6 y el enlace de retorno (LR) en la pila.
