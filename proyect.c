@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
+#include <string.h>
+#include <termios.h>
 //#include "EasyPIO.h"
 
 int menu(void);
@@ -25,6 +27,16 @@ int velocidad(unsigned long int*speed);
 
 const char led[]={14,15,18,23,24,25,8,7};
 void leds(unsigned int a);
+void setEcho(int enable) {
+    struct termios tty;
+    tcgetattr(STDIN_FILENO, &tty);
+    if (!enable)
+        tty.c_lflag &= ~ECHO;
+    else
+        tty.c_lflag |= ECHO;
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
 
 int main(void) {
     char usuarios[3][10] = {"tomi", "pipe", "fran"};
@@ -41,11 +53,10 @@ int main(void) {
         scanf("%s", usuario);
 
         printf("\tPassword: ");
-        for(int j =0;j<9;j++){
-            char c = getchar();
-            password[j] = c;
-            printw("*");
-        }
+        setEcho(0); // Deshabilitar el eco
+        scanf("%s", password);
+        setEcho(1); // Habilitar el eco
+        printf("\n");
 
         for (int i = 0; i < 3; i++) {
             int user_match = 1;
@@ -85,10 +96,10 @@ int main(void) {
     } else {
         printf("\n\n\tBienvenido al sistema\n");
         int choice;
-/*
+
         for (int i = 0; i < 8; i++) {
             pinMode(led[i], OUTPUT);
-        }*/
+        }
 
         unsigned long int speed = 300000000;
 
@@ -114,6 +125,7 @@ int main(void) {
     }
     return 0;
 }
+
 int menu(void){
     int s;
     do{
@@ -154,14 +166,14 @@ void autof(unsigned long int speed){
         do{
             output = 0x80;
             for(t=0;t<8;t++){
-                //leds(output);
+                leds(output);
                 disp_binary(output);
                 retardo(speed);
                 output = output>>1;
             }
             output = 0x01;
             for(t=0;t<6;t++){
-                //leds(output);
+                leds(output);
                 disp_binary(output);
                 output = output<<1;
                 retardo(speed);
@@ -169,7 +181,7 @@ void autof(unsigned long int speed){
             }
         }while(--j);
         output = 0x80;
-        //leds(output);
+        leds(output);
         disp_binary(output);
         vel = velocidad(&speed);
         
@@ -185,7 +197,7 @@ void choque(unsigned long int speed){
     unsigned char tabla[8] = {0x81,0x42,0x24,0x18,0x18,0x24,0x42,0x81};
     while (vel == 1){
         for(int i=0;i<8;i++){
-        //leds(tabla[i]);
+        leds(tabla[i]);
         disp_binary(tabla[i]);
         retardo(speed);
         }
@@ -203,7 +215,7 @@ void sirena(unsigned long int speed){
     {
         do{
             for(int i=0; i<4; i++){
-            //leds(tabla[i]);
+            leds(tabla[i]);
             disp_binary(tabla[i]);
             retardo(speed);
             }
@@ -221,19 +233,19 @@ void semaforo(unsigned long int speed) {
     int pos = 0xC0; // Inicializa con el valor para 11000000
     while(vel =1){
             for (int i = 0; i < 4; i++) {
-            //leds(pos); // Ejecuta las primeras cuatro secuencias
+            leds(pos); // Ejecuta las primeras cuatro secuencias
             disp_binary(pos);
             retardo(speed);
             pos >>= 2; // Realiza un corrimiento a la derecha de 2 bits
         }
 
         pos = 0xFF; // Valor para 11111111
-        //leds(pos);
+        leds(pos);
         disp_binary(pos);
         retardo(speed);
 
         pos = 0x00; // Valor para 00000000
-        //leds(pos);
+        leds(pos);
         disp_binary(pos);
         retardo(speed);
         vel =velocidad(&speed);
@@ -248,14 +260,14 @@ void retardo(unsigned long int a){
     a--;
     
 }
-/*
+
 void leds(unsigned int a){
     int Led;
     for(int i = 0; i < 8;i++){
         Led = (a>>1)&0x01;
         digitalWrite(led[i],Led);
     }
-}*/
+}
 
 int velocidad(unsigned long int* speed) {
     char c;
