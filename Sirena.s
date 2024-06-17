@@ -1,33 +1,34 @@
 .text
 .global sirena
+.export velocidad
+.export disp_binary
+.export leds
+.export retardo
+
 sirena:
     mov r0, =speed
     ldr r1, =tabla
-    mov r2, #1   ;inicializo j=1 ciclo while
-    mov r3, #4   ;ciclo for 4
+    mov r2, #1   
+    mov r3, #4   
 
 while_loop:
     mov r4, #0
-    ldrb r5, [r1, r4]       ;carga el elemento r3 de la tabla r1, en r4
-    do_loop:
+    ldrb r5, [r1, r4]      
 
-        for_loop:
-            bl disp_binary
+    for_loop:
+        bl leds
+
+        bl disp_binary
+
+        bl retardo
+
+        add r4, #1
+
+        cmp r4, r3
     
-            bl retardo
-    
-            add r4, #1
-    
-            cmp r4, r3
-        
-            blt inner_loop          ;branch less than
+        blt for_loop        
 
-    subs r2, r2, #1
-
-    cmp r2, #0
-    bge do_loop
-
-b while_loop ;esto capaz sacar. 
+b while_loop 
 
 bx lr
 

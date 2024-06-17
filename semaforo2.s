@@ -1,38 +1,49 @@
-.data
-speed:
-    .word 300000000               @ Valor inicial de speed
-
-.text
 .global semaforo
 
 semaforo:
-    push {lr}                     @ Guarda el registro link (LR) en la pila
-    ldr r5, =speed                @ Carga la dirección de speed en r5
+        PUSH {R4, R5, R6, LR}
+        LDR R0, =str_semaforo
+        BL printf
+        BL setup_nonblocking_input
+        MOV R4, #1
+        MOV R5, #0xC0
 
-    mov r0, #0xC0                 @ Inicializa pos con 0xC0 (11000000)
-    mov r1, #4                    @ Inicializa el contador a 4
+main_loop:
+        CMP R4, #1
+        BNE exit_semaforo
+        MOV R6, #4
 
-loop_shift:
-    mov r2, r0                    @ Mueve el valor de pos a r2 para disp_binary
-    bl disp_binary                @ Llama a disp_binary con el valor en r2
-    ldr r3, [r5]                  @ Carga el valor de speed en r3
-    mov r0, r3                    @ Pasa el valor de speed a r0
-    bl retardo                    @ Llama a retardo con el valor de speed
-    lsr r0, r0, #2                @ Realiza un corrimiento a la derecha de 2 bits en pos
-    subs r1, r1, #1               @ Decrementa el contador
-    bne loop_shift                @ Si el contador no es cero, repite el bucle
+loop:
+        MOV R0, R5
+        BL leds
+        BL disp_binary
+        MOV R0, R1
+        BL retardo
+        ASR R5, R5, #2
+        BL velocidad
+        MOV R4, R0
+        CMP R4, #0
+        BEQ exit_semaforo
+        SUBS R6, R6, #1
+        BNE loop
 
-    mov r0, #0xFF                 @ Establece pos a 0xFF (11111111)
-    bl disp_binary                @ Llama a disp_binary con el valor en r0
-    ldr r3, [r5]                  @ Carga el valor de speed en r3
-    mov r0, r3                    @ Pasa el valor de speed a r0
-    bl retardo                    @ Llama a retardo con el valor de speed
+        MOV R5, #0xFF
+        BL leds
+        BL disp_binary
+        MOV R5, #0x00
+        BL leds
+        BL disp_binary
+        BL velocidad
+        MOV R4, R0
+        CMP R4, #0
+        BEQ exit_semaforo
+        MOV R5, #0xC0
+        B main_loop
 
-    mov r0, #0x00                 @ Establece pos a 0x00 (00000000)
-    bl disp_binary                @ Llama a disp_binary con el valor en r0
-    ldr r3, [r5]                  @ Carga el valor de speed en r3
-    mov r0, r3                    @ Pasa el valor de speed a r0
-    bl retardo                    @ Llama a retardo con el valor de speed
+exit_semaforo:
+        POP {R4, R5, R6, PC}
 
-    pop {lr}                      @ Restaura el valor del registro link
-    bx lr                         @ Retorna de la función
+.data
+
+str_semaforo:
+    .asciz "Semaforo...\n"
