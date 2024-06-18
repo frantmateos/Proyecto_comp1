@@ -1,45 +1,88 @@
-.text
-.global sirena
+.text 
+.global semaforo
+.extern velocidad
+.extern disp_binary
+.extern leds
+.extern retardo
+.extern setup_nonblocking_input
 
 semaforo:
-    mov r0, =speed
-    mov r1, 0xC0
-    mov r2, #0
+    PUSH {R5, R6,R7, LR}
+    BL setup_nonblocking_input
+    MOV R2,#1
 
+while_loop:
+    MOV R5, #0xC0
+    MOV R7, #4
+
+    CMP R2, #0
+    BEQ exit_loop
 
 for_loop:
+    MOV R0, R5
+    BL disp_binary
 
-    cmp r2, #0      
-    blt final_pattern
+    MVN R0, R5
+    BL leds 
+
+    LDR R0,=speed
+    LDR R6,[R0]
+    MOV R0, R6 
+    BL retardo
+
+    MOV R0, R5
+    LSR R5,R5,#2
+
+    LDR R0, =speed
+    BL velocidad       
+    CMP R0, #0
+    BEQ exit_loop 
+
+    SUBS R7, R7, #1
+    BNE for_loop
+
+    LDR R0,=speed
+    LDR R6,[R0]
+    MOV R0, R6 
+    BL retardo
+
+    BL next
+
+next:
+    MOV R5, #0XFF
+
+    MOV R0, R5
+    BL disp_binary
+
+    MOV R0,R5
+    BL leds
+
+    LDR R0, =speed
+    LDR R6, [R0]
+    MOV R0, R6
+    BL retardo
+
+    LDR R0, =speed
+    BL velocidad       
+    CMP R0, #0
+    BEQ exit_loop 
+
+    MOV R5, #0X00
     
-    bl disp_binary
+    MOV R0,R5
+    BL disp_binary
 
-    bl retardo
-    
-    lsr r1, r1, #2     # Realizar un corrimiento a la derecha de 2 bits
+    MVN R0,R5 
+    BL leds
 
-    subs r2, r2, #1    # Decrementar r2
+    LDR R0, =speed
+    BL velocidad       
+    CMP R0, #0
+    BEQ exit_loop 
 
-    b for_loop
+    BL while_loop
 
-final_pattern:
-    mov r1, #0xFF      # Valor para ********
-    mov r0, r1         # Mover el valor de r1 a r0
-    bl disp_binary     # Llamar a disp_binary
+exit_loop:
+    POP {R5, R6, R7, PC}
 
-    ldr r0, =speed     # Cargar la dirección de speed
-    ldr r0, [r0]       # Cargar el valor de speed en r0
-    bl retardo         # Llamar a retardo
 
-    mov r1, #0x00      # Valor para --------
-    mov r0, r1         # Mover el valor de r1 a r0
-    bl disp_binary     # Llamar a disp_binary
-
-    ldr r0, =speed     # Cargar la dirección de speed
-    ldr r0, [r0]       # Cargar el valor de speed en r0
-    bl retardo         # Llamar a retardo
-
-    bx lr              # Retornar de la función      
-
-.global disp_binary
-.global retardo

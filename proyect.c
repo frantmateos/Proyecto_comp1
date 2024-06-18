@@ -21,12 +21,13 @@ void autof(unsigned long int a);
 void disp_binary(int);
 void choque(unsigned long int a);
 void Sirena(unsigned long int a);
-void semaforo(unsigned long int a);
+void Semaforo(unsigned long int a);
 
 void retardo(unsigned long int a);
 int velocidad(unsigned long int* speed);
 
 void sirena(unsigned long int a);
+void semaforo(unsigned long int a);
 
 const char led[]={14,15,18,23,24,25,8,7};
 void leds(unsigned int a);
@@ -209,7 +210,6 @@ void autof(unsigned long int speed){
 }
 
 void choque(unsigned long int speed){
-
     setup_nonblocking_input();
     int vel = 1;
     char a;
@@ -228,7 +228,6 @@ void choque(unsigned long int speed){
 }
     
 void Sirena(unsigned long int speed){
-    printf("Sirena...\n");
     setup_nonblocking_input();
     int vel = 1;
 
@@ -250,13 +249,11 @@ void Sirena(unsigned long int speed){
 }
 
 
-void semaforo(unsigned long int speed) {
-    printf("Semaforo...\n");
-
+void Semaforo(unsigned long int speed) {
     setup_nonblocking_input();
-
     int vel = 1;
-    int pos = 0xC0; 
+    int pos = 0xC0;
+
     while(vel == 1){
         for (int i = 0; i < 4; i++) {
             leds(pos); 
@@ -277,10 +274,6 @@ void semaforo(unsigned long int speed) {
         leds(pos);
         disp_binary(pos);
 
-        vel = velocidad(&speed);
-        if(vel == 0){
-            return;
-        }
     }
 }
 

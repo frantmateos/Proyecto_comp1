@@ -1,53 +1,57 @@
+.text
 .global sirena
+.extern velocidad
+.extern disp_binary
+.extern leds
+.extern retardo
+.extern setup_nonblocking_input
+.extern speed 
 
 sirena:
-        PUSH {R4, R5, R6, R7, LR}    
-        LDR R0, =str_sirena          
-        BL printf                    
+    push {lr} 
 
-        BL setup_nonblocking_input   
+    bl setup_nonblocking_input
 
-        MOV R4, #1                   
+    ldr r1, =tabla
+    mov r2, #1
+    mov r3, #4
 
-        LDR R5, =tabla               
-main_loop:
-        CMP R4, #1                   
-        BNE exit_sirena              
+while_loop:
+    cmp r2, #0
+    beq exit_loop
 
-        MOV R7, #4                  
+    mov r4, #0
 
-loop:
-        LDRB R6, [R5], #1            
-        MOV R0, R6                   
-        BL leds                      
-        MOV R0, R6                   
-        BL disp_binary               
+for_loop:
+    ldrb r5, [r1],#1
+    mov R0,R5
+    bl disp_binary
+    mvn R0,R5
+    bl leds
 
-        MOV R0, R1                   
-        BL retardo                   
+    ldr r0, =speed
+    ldr r6, [r0]       @ Load the value of speed into r6
+    mov r0, r6
+    bl retardo
 
-        MOV R0, R1                  
-        BL velocidad                
-        MOV R4, R0                   
+    ldr r0, =speed
+    bl velocidad       @ Call velocidad with address of speed
+    cmp r0, #0
+    beq exit_loop 
 
-        CMP R4, #0                   
-        BEQ exit_sirena            
+    subs r4, r4, #1
+    BNE for_loop
 
-        SUBS R7, R7, #1           
-        BNE loop                 
+    b while_loop
 
-        B main_loop        
-
-exit_sirena:
-        POP {R4, R5, R6, R7, PC}     
+exit_loop:
+    pop {lr} 
+    bx lr
 
 .data
-
-str_sirena:
-    .asciz "Sirena...\n"
-
 tabla:
-    .byte 0xF0
-    .byte 0x0F
+    .byte 0xF0 
+    .byte 0x0F 
     .byte 0xCC
     .byte 0x33
+

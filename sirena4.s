@@ -1,65 +1,63 @@
 .text 
-.global semaforo
+.global sirena
 .extern velocidad
 .extern disp_binary
 .extern leds
 .extern retardo
 .extern setup_nonblocking_input
 
-semaforo:
-    PUSH {R5, R6, LR}
+sirena:
+    PUSH {R4, R5, R6, LR}
     BL setup_nonblocking_input
-    MOV R2, #1
+    MOV R4, #4
+    MOV R2,#1
 
 while_loop:
-    MOV R5, #0xC0
-    MOV R6, #4
-
+    LDR R5, =tabla
+    MOV R7,#0
     CMP R2, #0
     BEQ exit_loop
 
+
+
 for_loop:
-    MOV R0, R5
+    LDRB R6, [R5,R7]
+    ADD R7,R7,#1
+
+    MOV R0, R6
     BL disp_binary
 
-    MVN R0, R5
+    MVN R0, R6 
     BL leds 
 
     LDR R0, =speed
     LDR R6, [R0]
-    MOV R0, R6 
+    MOV R0, R6
     BL retardo
-
-    ASR R5, R5, #2 
 
     LDR R0, =speed
     BL velocidad       
     CMP R0, #0
     BEQ exit_loop 
 
-    SUBS R6, R6, #1
+    SUBS R4, R4, #1 
     BNE for_loop
 
-    BL next
-
-next:
-    MOV R5, #0xFF
-
-    MOV R0, R5
-    BL disp_binary
-
-    MVN R0, R5
-    BL leds
-
-    MOV R5, #0x00
-    
-    MOV R0, R5
-    BL disp_binary
-
-    MVN R0, R5 
-    BL leds
+    MOV R4,#4
 
     BL while_loop
 
 exit_loop:
-    POP {R5, R6, PC}
+    POP {R4, R5, R6, PC}
+
+.data 
+
+tabla:
+    .byte 0xF0 
+    .byte 0x0F 
+    .byte 0xCC
+    .byte 0x33
+
+.global speed
+speed:
+    .word 100000000
